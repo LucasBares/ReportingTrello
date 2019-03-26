@@ -1,0 +1,127 @@
+<html>
+
+<head>
+  <!--Load the AJAX API-->
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="https://unpkg.com/jspdf@latest/dist/jspdf.min.js"></script>
+</head>
+
+<body>
+  <!--Div that will hold the pie chart-->
+  <button id="save-pdf">Download</button>
+  <div id="chart_div" style="width:400; height:300"></div>
+</body>
+
+<script type="text/javascript">
+  let arrayIds = new Array();
+  let arraysIdToDo = new Array();
+  let arraysIdDoing = new Array();
+  let arraysIdComplete = new Array();
+
+  function getData(id, type) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET',
+      `https://api.trello.com/1/lists/${id}/cards?key=8b6a5d9b39ac542b5270c149eeb2b18e&token=35d60eae0ac21ce823e6c4a0ca16108d5d68958cb9efa05e79dfd249affe01dd`
+    );
+    xhr.send(null);
+    xhr.onreadystatechange = function () {
+      var DONE = 4; // readyState 4 means the request is done.
+      var OK = 200; // status 200 is a successful return.
+      if (xhr.readyState === DONE) {
+        if (xhr.status === OK) {
+          let a = xhr.responseText;
+          a = JSON.parse(a);
+          let x = 0;
+          let haveNext = true;
+          while (haveNext) {
+            if (!!a[x]) {
+              arrayIds[x] = a[x].id;
+              x++;
+            } else {
+              haveNext = false;
+            }
+          }
+          if (type == 'toDo') {
+            arraysIdToDo = arrayIds;
+            doThat(arraysIdToDo);
+          } else if (type == 'Doing') {
+            arraysIdDoing = arrayIds;
+            doThat(arraysIdDoing);
+          } else {
+            arraysIdComplete = arrayIds;
+            doThat(arraysIdComplete);
+          }
+
+          // 'This is the returned text.'
+        } else {
+          console.log('Error: ' + xhr.status); // An error occurred during the request.
+        }
+      }
+    }
+  }
+
+  function retriveData() {
+    getData('5c9556d97bf4d2452f45767c', 'toDo');
+    getData('5c9556da21bcf86403af14ee', 'Doing');
+    getData('5c9556dc392b0e36831ae757', 'Complete');
+  }
+
+  function doThat(arrayId) {
+    let valor = arrayId.length;
+    var data;
+    var chart;
+    var btnSave = document.getElementById('save-pdf');
+
+    btnSave.addEventListener('click', function () {
+      var doc = new jsPDF();
+      doc.addImage(chart.getImageURI(), 0, 0);
+      doc.save('chart.pdf');
+    }, false);
+
+    // Load the Visualization API and the piechart package.
+    google.charts.load('current', {
+      'packages': ['corechart']
+    });
+
+    // Set a callback to run when the Google Visualization API is loaded.
+    google.charts.setOnLoadCallback(drawChart);
+
+    // Callback that creates and populates a data table,
+    // instantiates the pie chart, passes in the data and
+    // draws it.
+    function drawChart() {
+
+      // Create our data table.
+      data = new google.visualization.DataTable();
+      data.addColumn('string', 'Cards');
+      data.addColumn('number', 'Slices');
+      data.addRows([
+        ['To Do', valor],
+        ['Doing', 6],
+        ['Complete', valor],
+      ]);
+
+      // Set chart options
+      var options = {
+        'title': 'Coverage Tests',
+        'width': 400,
+        'height': 300
+      };
+
+      // Instantiate and draw our chart, passing in some options.
+      chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+      google.visualization.events.addListener(chart, 'select', selectHandler);
+      chart.draw(data, options);
+    }
+
+    function selectHandler() {
+      var selectedItem = chart.getSelection()[0];
+      var value = data.getValue(selectedItem.row, 0);
+      alert('The user selected ' + value);
+    }
+  }
+
+  retriveData();
+</script>
+
+</html>
