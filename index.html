@@ -17,11 +17,13 @@
   let arraysIdToDo = new Array();
   let arraysIdDoing = new Array();
   let arraysIdComplete = new Array();
+  let key = PROCESS.ENV.KEY;
+  let token = PROCESS.ENV.TOKEN;
 
   function getData(id, type) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET',
-      `https://api.trello.com/1/lists/${id}/cards?key=8b6a5d9b39ac542b5270c149eeb2b18e&token=35d60eae0ac21ce823e6c4a0ca16108d5d68958cb9efa05e79dfd249affe01dd`
+      `https://api.trello.com/1/lists/${id}/cards?key=${key}&token=${token}`
     );
     xhr.send(null);
     xhr.onreadystatechange = function () {
